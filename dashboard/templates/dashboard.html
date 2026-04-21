@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOC Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('favicon') }}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+        
+        h1 { color: #38bdf8; margin-bottom: 20px; }
+        h2 { color: #94a3b8; margin: 20px 0 15px; font-size: 1.2rem; }
+        h3 { color: #64748b; margin-bottom: 10px; font-size: 1rem; }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1e293b;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav a {
+            color: #38bdf8;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            transition: all 0.2s;
+        }
+        
+        .nav a:hover {
+            background: #334155;
+            border-color: #38bdf8;
+        }
+        
+        .nav a.danger {
+            color: #ef4444;
+            border-color: #ef4444;
+        }
+        
+        .nav a.danger:hover {
+            background: rgba(239,68,68,0.2);
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+        
+        .card h2 {
+            font-size: 2.5rem;
+            color: #38bdf8;
+            margin: 0 0 5px;
+        }
+        
+        .card p { color: #94a3b8; font-size: 0.9rem; margin: 0; }
+        .card.danger h2 { color: #ef4444; }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+        
+        /* Filtros */
+        .filters {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filters label { color: #94a3b8; font-size: 0.9rem; }
+        
+        .filters select, .filters input {
+            padding: 8px 12px;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+        
+        .filters button {
+            padding: 8px 16px;
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .filters button:hover { background: #0ea5e9; }
+        
+        /* Tabla */
+        .table-container {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        
+        th {
+            background: #334155;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #334155;
+            font-size: 0.85rem;
+        }
+        
+        tr:hover td { background: #334155; }
+        tr:last-child td { border-bottom: none; }
+        
+        .ip { font-family: monospace; color: #38bdf8; }
+        .risk { font-weight: bold; }
+        .risk-critical { color: #ef4444; }
+        .risk-high { color: #f97316; }
+        .risk-medium { color: #eab308; }
+        .risk-low { color: #22c55e; }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-critical { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .badge-high { background: rgba(249,115,22,0.2); color: #f97316; }
+        .badge-medium { background: rgba(234,179,8,0.2); color: #eab308; }
+        .badge-low { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .badge-info { background: rgba(56,189,248,0.2); color: #38bdf8; }
+        .badge-default { background: rgba(148,163,184,0.2); color: #94a3b8; }
+        
+        .agent-tag {
+            background: #334155;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #38bdf8;
+        }
+        
+        .source-tag {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        /* Paginacion */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 15px;
+        }
+        
+        .pagination a, .pagination span {
+            padding: 8px 12px;
+            background: #334155;
+            color: #e2e8f0;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .pagination a:hover { background: #475569; }
+        .pagination .current { background: #38bdf8; color: #0f172a; }
+        .pagination .disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .info { color: #64748b; font-size: 0.85rem; margin-top: 5px; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            th, td { padding: 8px; font-size: 0.75rem; }
+            .filters { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>SOC Dashboard</h1>
+            <div class="nav">
+                <a href="/">Dashboard</a>
+                <a href="/agents">Agentes</a>
+                <a href="/threats" class="danger">Amenazas</a>
+                <a href="/pcap">PCAP</a>
+            </div>
+        </div>
+        <div>
+            <span class="info">{{ stats.total_agents }} agentes | {{ total_logs }} eventos</span>
+        </div>
+    </div>
+    
+    <!-- Tarjetas de estadisticas -->
+    <div class="stats-cards">
+        <div class="card" title="Total de eventos recibidos por los agentes">
+            <h2>{{ total_logs }}</h2>
+            <p>Total Eventos</p>
+        </div>
+        <div class="card" title="Eventos con riesgo 30-49">
+            <h2>{{ stats.high }}</h2>
+            <p>Alto Riesgo (30-49)</p>
+        </div>
+        <div class="card danger" title="Eventos con riesgo 50-99">
+            <h2>{{ stats.critical }}</h2>
+            <p>Critico (50-99)</p>
+        </div>
+        <div class="card danger" style="background: #7f1d1d;" title="Eventos con riesgo 100+ (compromiso confirmado)">
+            <h2>{{ stats.breach }}</h2>
+            <p>Breach (100+)</p>
+        </div>
+        <div class="card">
+            <h2>{{ stats.total_agents }}</h2>
+            <p title="Agentes que han enviado eventos">Agentes Activos</p>
+        </div>
+    </div>
+
+    <!-- Leyenda explicativa -->
+    <div style="margin: 20px 0; padding: 10px; background: #1e293b; border-radius: 6px; font-size: 0.85rem; color: #94a3b8;">
+        <strong>Nota:</strong> Las metricas superiores muestran <em>eventos</em> mientras que "Amenazas" muestra <em>IPs unicas correlacionadas</em>.
+        <span title="Cuenta eventos por su nivel de riesgo">Eventos</span> =
+        <span style="color:#ef4444;">{{ stats.breach }}</span> (BREACH) +
+        <span style="color:#f97316;">{{ stats.critical }}</span> (CRITICO) +
+        <span style="color:#eab308;">{{ stats.high }}</span> (ALTO) +
+        <span style="color:#22c55e;">otros</span>.
+        <span title="IPs unicas con patrones de ataque detectados">Amenazas</span> = IPs vistas por multiples agentes o con indicadores de compromiso.
+    </div>
+    
+    <!-- Graficos -->
+    <h2>Analisis de Seguridad</h2>
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>Top 10 IPs Atacantes</h3>
+            {{ top_ips_chart }}
+        </div>
+        <div class="chart-card">
+            <h3>Tipos de Ataque</h3>
+            {{ attack_types_chart }}
+        </div>
+        <div class="chart-card">
+            <h3>Por Fuente de Log</h3>
+            {{ by_source_chart }}
+        </div>
+        <div class="chart-card">
+            <h3>Eventos por Agente</h3>
+            {{ by_agent_chart }}
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <h2>Eventos Recientes</h2>
+    <div class="filters">
+        <form method="get" style="display: flex; flex-wrap: wrap; gap: 15px; width: 100%;">
+            <div>
+                <label>Agente:</label>
+                <select name="agent">
+                    <option value="">Todos</option>
+                    {% for agent in stats.agents_list %}
+                    <option value="{{ agent }}" {% if filters.agent_id == agent %}selected{% endif %}>{{ agent }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label>Fuente:</label>
+                <select name="source">
+                    <option value="">Todas</option>
+                    {% for source in stats.sources_list %}
+                    <option value="{{ source }}" {% if filters.source == source %}selected{% endif %}>{{ source }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label>Riesgo Min:</label>
+                <select name="min_risk">
+                    <option value="">Todos</option>
+                    <option value="15" {% if filters.min_risk == 15 %}selected{% endif %}>15+</option>
+                    <option value="30" {% if filters.min_risk == 30 %}selected{% endif %}>30+</option>
+                    <option value="50" {% if filters.min_risk == 50 %}selected{% endif %}>50+</option>
+                    <option value="100" {% if filters.min_risk == 100 %}selected{% endif %}>100+ (Critico)</option>
+                </select>
+            </div>
+            
+            <div>
+                <label>Buscar IP:</label>
+                <input type="text" name="ip" placeholder="IP..." value="{{ filters.src_ip or '' }}">
+            </div>
+            
+            <button type="submit">Filtrar</button>
+            <a href="/" style="padding: 8px 16px; background: #475569; color: #e2e8f0; border-radius: 6px; text-decoration: none;">Limpiar</a>
+        </form>
+    </div>
+    
+    <!-- Tabla de eventos -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Agente</th>
+                    <th>Host Objetivo</th>
+                    <th>IP Origen</th>
+                    <th>Servicio</th>
+                    <th>Tipo</th>
+                    <th>Riesgo</th>
+                    <th>Fuente</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.timestamp }}</td>
+                    <td><span class="agent-tag">{{ log.agent_id }}</span></td>
+                    <td>{{ log.target_host or '-' }}</td>
+                    <td><span class="ip">{{ log.src_ip or '-' }}</span></td>
+                    <td>{{ log.target_service or '-' }}</td>
+                    <td>
+                        <span class="badge badge-{{ 'critical' if log.severity == 'CRITICAL' else 'high' if log.severity == 'HIGH' else 'medium' if log.severity == 'MEDIUM' else 'low' if log.severity == 'LOW' else 'default' }}">
+                            {{ log.attack_type or 'unknown' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="risk risk-{{ 'critical' if log.risk >= 100 else 'critical' if log.risk >= 50 else 'high' if log.risk >= 30 else 'medium' if log.risk >= 15 else 'low' }}">
+                            {{ log.risk }}
+                        </span>
+                    </td>
+                    <td><span class="source-tag">{{ log.source or '-' }}</span></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #64748b;">
+                        No hay eventos registrados
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Paginacion -->
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="?page={{ page - 1 }}{% if filters.agent_id %}&agent={{ filters.agent_id }}{% endif %}{% if filters.source %}&source={{ filters.source }}{% endif %}{% if filters.min_risk %}&min_risk={{ filters.min_risk }}{% endif %}{% if filters.src_ip %}&ip={{ filters.src_ip }}{% endif %}">Anterior</a>
+        {% else %}
+            <span class="disabled">Anterior</span>
+        {% endif %}
+        
+        <span>Pagina {{ page }} de {{ total_pages }} ({{ total_logs }} eventos)</span>
+        
+        {% if page < total_pages %}
+            <a href="?page={{ page + 1 }}{% if filters.agent_id %}&agent={{ filters.agent_id }}{% endif %}{% if filters.source %}&source={{ filters.source }}{% endif %}{% if filters.min_risk %}&min_risk={{ filters.min_risk }}{% endif %}{% if filters.src_ip %}&ip={{ filters.src_ip }}{% endif %}">Siguiente</a>
+        {% else %}
+            <span class="disabled">Siguiente</span>
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='chartkick/Chart.bundle.js') }}"></script>
+    <script src="{{ url_for('static', filename='chartkick/chartkick.js') }}"></script>
+</body>
+</html>

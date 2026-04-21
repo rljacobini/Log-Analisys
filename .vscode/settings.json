@@ -1,8 +1,0 @@
-{
-    "python.analysis.extraPaths": ["."],
-    "python.analysis.pythonPath": "python",
-    "python.linting.pylintArgs": [
-        "--rcfile=.pylintrc",
-        "--disable=import-error"
-    ]
-}

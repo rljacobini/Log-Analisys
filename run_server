@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+"""Run SOC Platform Server."""
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+if __name__ == "__main__":  # pylint: disable=import-error
+    from server.server import app  # pylint: disable=import-error
+    from server.config import SERVER_HOST, SERVER_PORT, FLASK_DEBUG, ENABLE_SSL, SSL_CERT_FILE, SSL_KEY_FILE, DB_PATH  # pylint: disable=import-error
+    print(f"==================================================")
+    print(f"SERVIDOR SOC - Iniciado")
+    print(f"==================================================")
+    print(f"  http{'s' if ENABLE_SSL else ''}://{SERVER_HOST}:{SERVER_PORT}")
+    if ENABLE_SSL:
+        print(f"  SSL: {SSL_CERT_FILE}")
+    print(f"  DB path: {DB_PATH}")
+    print(f"==================================================")
+
+    app.run(
+        host=SERVER_HOST,
+        port=SERVER_PORT,
+        debug=FLASK_DEBUG,
+        ssl_context=(SSL_CERT_FILE, SSL_KEY_FILE) if ENABLE_SSL else None
+    )

@@ -1,0 +1,103 @@
+# ===========================================
+# PYTHON
+# ===========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+*.egg-info/
+
+# ===========================================
+# ENTORNO
+# ===========================================
+.env
+.env.local
+.env.*.local
+agent/.env
+agent2/.env
+agent2/.env.example
+webagent/.env
+webagent/.env.example
+dashboard/.env
+dashboard/.env.example
+pcap/.env
+pcap/.env.example
+
+# ===========================================
+# BASE DE DATOS
+# ===========================================
+*.db
+*.sqlite
+*.sqlite3
+server/database.db
+
+# ===========================================
+# LOGS
+# ===========================================
+*.log
+*.1log
+logs/
+data/auth*.log
+data/*.log
+
+# ===========================================
+# IDE
+# ===========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===========================================
+# SECRETOS Y CERTIFICADOS
+# ===========================================
+*.pem
+*.key
+*.crt
+*.pfx
+secrets/
+credentials.json
+server/*.crt
+server/*.key
+server/*.pfx
+data/Cert/*.key
+data/Cert/*.crt
+
+# ===========================================
+# ESTADOS DEL AGENTE
+# ===========================================
+*_state.json
+agent*_state.json
+agent2*_state.json
+state/
+
+# ===========================================
+# DOCUMENTACION LOCAL
+# ===========================================
+*.local.md
+ROADMAP.md
+
+# ===========================================
+# TEMP / TEST
+# ===========================================
+temp/
+test/
+tests/
+
+# ===========================================
+# PCAP OUTPUT
+# ===========================================
+outputs/
+results.json
+*.json
+pcaps/*.pcap
+pcaps/*.pcapng
+pcaps/*.ng
